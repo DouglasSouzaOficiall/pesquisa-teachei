@@ -6,25 +6,34 @@
     <title>Dashboard Macro - Teachei Zap</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <style>
         :root { --green: #34C759; --dark: #000; --bg: #F2F2F7; }
         body { font-family: 'Inter', sans-serif; background-color: var(--bg); margin: 0; padding: 0; }
         .header-teachei { background-color: var(--green); width: 100%; padding: 40px 0; display: flex; justify-content: center; align-items: center; margin-bottom: 30px; }
         .logo-img { max-height: 80px; width: auto; }
         .container-dash { max-width: 1100px; margin: 0 auto; padding: 20px; }
-        h2 { font-weight: 900; color: #333; margin-bottom: 30px; text-align: center; }
+        
+        /* Ajuste do Título e Contador */
+        .header-title-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: #fff; padding: 20px; border-radius: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        h2 { font-weight: 900; color: #333; margin: 0; font-size: 1.5rem; }
+        .counter-badge { background: var(--dark); color: white; padding: 10px 20px; border-radius: 12px; font-weight: 900; font-size: 1.1rem; }
+
         .grid-charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 40px; }
         .chart-card { background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); text-align: center; }
         .chart-card h6 { font-weight: 800; margin-bottom: 15px; color: #555; font-size: 0.9rem; min-height: 40px; }
-        canvas { max-height: 200px; }
-        .btn-export { background: var(--dark); color: #fff; border: none; border-radius: 10px; padding: 12px 25px; font-weight: 800; transition: 0.3s; }
+        canvas { max-height: 250px !important; }
+
+        .btn-export { background: var(--dark); color: #fff; border: none; border-radius: 10px; padding: 12px 25px; font-weight: 800; }
         .card-resposta { background: #fff; border-radius: 16px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: relative; }
-        .card-resposta .header-card { border-bottom: 1px solid #eee; padding-bottom: 12px; margin-bottom: 15px; padding-right: 40px; }
-        .card-resposta h5 { color: var(--green); font-weight: 900; margin: 0; font-size: 1.1rem; }
-        .card-resposta .sub-info { font-size: 0.85rem; color: #666; font-weight: 600; margin-top: 4px; display: block; }
-        .btn-delete { position: absolute; top: 20px; right: 20px; background: #FF3B30; color: white; border: none; border-radius: 8px; width: 32px; height: 32px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; }
+        .card-resposta h5 { color: var(--green); font-weight: 900; margin: 0; font-size: 1.1rem; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px; }
+        .sub-info { font-size: 0.85rem; color: #666; font-weight: 600; display: block; margin-bottom: 10px; }
+        .btn-delete { position: absolute; top: 20px; right: 20px; background: #FF3B30; color: white; border: none; border-radius: 8px; width: 32px; height: 32px; font-weight: bold; cursor: pointer; }
+        
         .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
         .label { font-weight: 700; color: #8E8E93; display: block; font-size: 0.75rem; text-transform: uppercase; }
         .value { color: var(--dark); font-weight: 600; font-size: 0.9rem; }
@@ -36,7 +45,11 @@
     </header>
 
     <div class="container-dash">
-        <h2>Análise de Campo Macro</h2>
+        <div class="header-title-flex">
+            <h2>Análise de Campo Macro</h2>
+            <div id="totalBadge" class="counter-badge">0 CADASTROS</div>
+        </div>
+
         <div class="grid-charts">
             <div class="chart-card"><h6>Dificuldade em achar contatos?</h6><canvas id="c1"></canvas></div>
             <div class="chart-card"><h6>Onde costuma procurar?</h6><canvas id="c2"></canvas></div>
@@ -46,10 +59,10 @@
             <div class="chart-card"><h6>Pagaria R$ 24,90 / 3 meses?</h6><canvas id="c6"></canvas></div>
         </div>
 
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div id="total" style="font-weight: 800; color: #8E8E93;">Carregando dados...</div>
+        <div class="d-flex justify-content-end mb-4">
             <button class="btn-export" onclick="exportarExcel()">📊 EXPORTAR EXCEL</button>
         </div>
+        
         <div id="listaRespostas"></div>
     </div>
 
@@ -68,6 +81,10 @@
         
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
+
+        // Registro Global do Plugin de Labels
+        Chart.register(ChartDataLabels);
+
         let charts = {};
         let dadosExport = [];
         const colors = ['#34C759', '#007AFF', '#FF9500', '#FF3B30', '#AF52DE', '#5856D6'];
@@ -78,25 +95,34 @@
             const total = values.reduce((a, b) => a + b, 0);
 
             if (charts[id]) charts[id].destroy();
+            
             charts[id] = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
                     labels: Object.keys(dataObj),
-                    datasets: [{ data: values, backgroundColor: colors }]
+                    datasets: [{
+                        data: values,
+                        backgroundColor: colors,
+                        borderWidth: 2
+                    }]
                 },
-                options: { 
-                    plugins: { 
-                        legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 9 } } },
-                        tooltip: {
-                            callbacks: {
-                                label: (item) => {
-                                    const val = item.raw;
-                                    const pct = ((val / total) * 100).toFixed(1) + "%";
-                                    return ` ${item.label}: ${val} (${pct})`;
-                                }
-                            }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 10 } } },
+                        datalabels: {
+                            display: true,
+                            color: '#fff',
+                            font: { weight: 'bold', size: 12 },
+                            formatter: (value) => {
+                                if (total === 0) return "0%";
+                                return ((value / total) * 100).toFixed(0) + "%";
+                            },
+                            anchor: 'center',
+                            align: 'center'
                         }
-                    } 
+                    }
                 }
             });
         }
@@ -104,19 +130,14 @@
         window.excluirCadastro = async (id) => {
             const res = await Swal.fire({
                 title: 'Excluir Cadastro?',
-                text: "Esta ação não pode ser desfeita!",
+                text: "Não será possível reverter!",
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#34C759',
-                cancelButtonColor: '#FF3B30',
-                confirmButtonText: 'Sim, excluir',
-                cancelButtonText: 'Cancelar'
+                confirmButtonText: 'Sim, excluir'
             });
             if(res.isConfirmed) {
-                try { 
-                    await deleteDoc(doc(db, "respostas", id)); 
-                    Swal.fire('Pronto!', 'Removido com sucesso.', 'success');
-                } catch (e) { Swal.fire('Erro!', 'Falha ao excluir.', 'error'); }
+                try { await deleteDoc(doc(db, "respostas", id)); } catch (e) { console.error(e); }
             }
         };
 
@@ -126,6 +147,9 @@
             dadosExport = [];
             let counts = { p1:{}, p2:{}, p3:{}, p4:{}, p5:{}, p6:{} };
             
+            // Atualiza Contador
+            document.getElementById('totalBadge').innerText = `${snap.size} CADASTROS`;
+
             snap.forEach(docSnap => {
                 const r = docSnap.data();
                 dadosExport.push(r);
@@ -137,19 +161,18 @@
                 card.className = 'card-resposta';
                 card.innerHTML = `
                     <button class="btn-delete" onclick="excluirCadastro('${docSnap.id}')">✕</button>
-                    <div class="header-card">
-                        <h5>${r.nome}</h5>
-                        <span class="sub-info">🎂 ${r.idade} anos | 📱 ${r.whatsapp}</span>
-                    </div>
+                    <h5>${r.nome}</h5>
+                    <span class="sub-info">📱 ${r.whatsapp} | 🎂 ${r.idade} anos</span>
                     <div class="info-grid">
                         <div><span class="label">Dificuldade</span><span class="value">${r.p1 || '-'}</span></div>
-                        <div><span class="label">Busca em</span><span class="value">${r.p2 || '-'}</span></div>
+                        <div><span class="label">Busca</span><span class="value">${r.p2 || '-'}</span></div>
                         <div><span class="label">Profissão</span><span class="value">${r.p4 || '-'}</span></div>
                         <div><span class="label">Pagaria?</span><span class="value">${r.p6 || '-'}</span></div>
                     </div>`;
                 lista.appendChild(card);
             });
-            document.getElementById('total').innerText = `${snap.size} RESPOSTAS`;
+            
+            // Renderiza Gráficos
             ['p1','p2','p3','p4','p5','p6'].forEach((p, i) => createPie(`c${i+1}`, counts[p]));
         });
 
