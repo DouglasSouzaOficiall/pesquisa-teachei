@@ -7,22 +7,12 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         :root { --green: #34C759; --dark: #000; --bg: #F2F2F7; }
         body { font-family: 'Inter', sans-serif; background-color: var(--bg); margin: 0; padding: 0; }
-        
-        /* TESTEIRA AMPLIADA */
-        .header-teachei { 
-            background-color: var(--green); 
-            width: 100%; 
-            padding: 20px 0; /* Aumentado */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 30px;
-        }
+        .header-teachei { background-color: var(--green); width: 100%; padding: 40px 0; display: flex; justify-content: center; align-items: center; margin-bottom: 30px; }
         .logo-img { max-height: 80px; width: auto; }
-
         .container-dash { max-width: 1100px; margin: 0 auto; padding: 20px; }
         h2 { font-weight: 900; color: #333; margin-bottom: 30px; text-align: center; }
         .grid-charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 40px; }
@@ -40,11 +30,11 @@
 </head>
 <body>
     <header class="header-teachei">
-        <img src="logo.png" class="logo-img">
+        <img src="Artboard 3@4x.png" class="logo-img">
     </header>
 
     <div class="container-dash">
-        <h2>Dashboard Pesquisa de Campo</h2>
+        <h2>Análise de Campo Macro</h2>
         <div class="grid-charts">
             <div class="chart-card"><h6>Dificuldade em achar contatos?</h6><canvas id="c1"></canvas></div>
             <div class="chart-card"><h6>Onde costuma procurar?</h6><canvas id="c2"></canvas></div>
@@ -76,6 +66,7 @@
         let charts = {};
         let dadosExport = [];
         const colors = ['#34C759', '#007AFF', '#FF9500', '#FF3B30', '#AF52DE', '#5856D6'];
+
         function createPie(id, dataObj) {
             const ctx = document.getElementById(id).getContext('2d');
             if (charts[id]) charts[id].destroy();
@@ -88,11 +79,29 @@
                 options: { plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } } }
             });
         }
+
         window.excluirCadastro = async (id) => {
-            if(confirm("Deseja realmente excluir este cadastro?")) {
-                try { await deleteDoc(doc(db, "respostas", id)); } catch (error) { alert("Erro ao excluir."); }
+            const res = await Swal.fire({
+                title: 'Tem certeza?',
+                text: "Você não poderá reverter esta exclusão!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#34C759',
+                cancelButtonColor: '#FF3B30',
+                confirmButtonText: 'Sim, excluir!',
+                cancelButtonText: 'Cancelar'
+            });
+
+            if(res.isConfirmed) {
+                try { 
+                    await deleteDoc(doc(db, "respostas", id)); 
+                    Swal.fire('Excluído!', 'O cadastro foi removido.', 'success');
+                } catch (error) { 
+                    Swal.fire('Erro!', 'Não foi possível excluir.', 'error'); 
+                }
             }
         };
+
         onSnapshot(query(collection(db, "respostas"), orderBy("data", "desc")), (snap) => {
             const lista = document.getElementById('listaRespostas');
             lista.innerHTML = "";
@@ -108,11 +117,11 @@
                 const card = document.createElement('div');
                 card.className = 'card-resposta';
                 card.innerHTML = `<button class="btn-delete" onclick="excluirCadastro('${id}')">✕</button>
-                    <h5>${r.nome}</h5>
+                    <h5>${r.nome} - <small style="font-size: 0.8rem; color: #8E8E93;">${r.whatsapp}</small></h5>
                     <div class="info-grid">
+                        <div><span class="label">Idade</span><span class="value">${r.idade || '-'}</span></div>
                         <div><span class="label">Dificuldade</span><span class="value">${r.p1 || '-'}</span></div>
-                        <div><span class="label">Busca em</span><span class="value">${r.p2 || '-'}</span></div>
-                        <div><span class="label">Frequência</span><span class="value">${r.p3 || '-'}</span></div>
+                        <div><span class="label">Busca</span><span class="value">${r.p2 || '-'}</span></div>
                         <div><span class="label">Profissão</span><span class="value">${r.p4 || '-'}</span></div>
                         <div><span class="label">Extra</span><span class="value">${r.p5 || '-'}</span></div>
                         <div><span class="label">Pagaria</span><span class="value">${r.p6 || '-'}</span></div>
@@ -122,9 +131,10 @@
             document.getElementById('total').innerText = `${snap.size} RESPOSTAS`;
             ['p1','p2','p3','p4','p5','p6'].forEach((p, i) => createPie(`c${i+1}`, counts[p]));
         });
+
         window.exportarExcel = () => {
-            let csv = "Nome;Dificuldade;Busca;Frequencia;Profissao;Extra;Pagaria;Data\n";
-            dadosExport.forEach(r => csv += `${r.nome};${r.p1};${r.p2};${r.p3};${r.p4};${r.p5};${r.p6};${r.data}\n`);
+            let csv = "Nome;Idade;Whatsapp;Dificuldade;Busca;Frequencia;Profissao;Extra;Pagaria;Data\n";
+            dadosExport.forEach(r => csv += `${r.nome};${r.idade};${r.whatsapp};${r.p1};${r.p2};${r.p3};${r.p4};${r.p5};${r.p6};${r.data}\n`);
             const link = document.createElement("a");
             link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
             link.setAttribute("download", "teachei_dados.csv");
@@ -132,5 +142,4 @@
         };
     </script>
 </body>
-
 </html>
