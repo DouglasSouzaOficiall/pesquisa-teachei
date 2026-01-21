@@ -20,13 +20,10 @@
         .chart-card h6 { font-weight: 800; margin-bottom: 15px; color: #555; font-size: 0.9rem; min-height: 40px; }
         canvas { max-height: 200px; }
         .btn-export { background: var(--dark); color: #fff; border: none; border-radius: 10px; padding: 12px 25px; font-weight: 800; transition: 0.3s; }
-        
-        /* CARD DE RESPOSTA */
         .card-resposta { background: #fff; border-radius: 16px; padding: 20px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: relative; }
         .card-resposta .header-card { border-bottom: 1px solid #eee; padding-bottom: 12px; margin-bottom: 15px; padding-right: 40px; }
         .card-resposta h5 { color: var(--green); font-weight: 900; margin: 0; font-size: 1.1rem; }
         .card-resposta .sub-info { font-size: 0.85rem; color: #666; font-weight: 600; margin-top: 4px; display: block; }
-        
         .btn-delete { position: absolute; top: 20px; right: 20px; background: #FF3B30; color: white; border: none; border-radius: 8px; width: 32px; height: 32px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; }
         .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
         .label { font-weight: 700; color: #8E8E93; display: block; font-size: 0.75rem; text-transform: uppercase; }
@@ -35,12 +32,11 @@
 </head>
 <body>
     <header class="header-teachei">
-        <img src="logo.png" class="logo-img">
+        <img src="Artboard 3@4x.png" class="logo-img">
     </header>
 
     <div class="container-dash">
         <h2>Análise de Campo Macro</h2>
-        
         <div class="grid-charts">
             <div class="chart-card"><h6>Dificuldade em achar contatos?</h6><canvas id="c1"></canvas></div>
             <div class="chart-card"><h6>Onde costuma procurar?</h6><canvas id="c2"></canvas></div>
@@ -54,7 +50,6 @@
             <div id="total" style="font-weight: 800; color: #8E8E93;">Carregando dados...</div>
             <button class="btn-export" onclick="exportarExcel()">📊 EXPORTAR EXCEL</button>
         </div>
-
         <div id="listaRespostas"></div>
     </div>
 
@@ -79,14 +74,30 @@
 
         function createPie(id, dataObj) {
             const ctx = document.getElementById(id).getContext('2d');
+            const values = Object.values(dataObj);
+            const total = values.reduce((a, b) => a + b, 0);
+
             if (charts[id]) charts[id].destroy();
             charts[id] = new Chart(ctx, {
                 type: 'doughnut',
                 data: {
                     labels: Object.keys(dataObj),
-                    datasets: [{ data: Object.values(dataObj), backgroundColor: colors }]
+                    datasets: [{ data: values, backgroundColor: colors }]
                 },
-                options: { plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 10 } } } } }
+                options: { 
+                    plugins: { 
+                        legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 9 } } },
+                        tooltip: {
+                            callbacks: {
+                                label: (item) => {
+                                    const val = item.raw;
+                                    const pct = ((val / total) * 100).toFixed(1) + "%";
+                                    return ` ${item.label}: ${val} (${pct})`;
+                                }
+                            }
+                        }
+                    } 
+                }
             });
         }
 
@@ -101,14 +112,11 @@
                 confirmButtonText: 'Sim, excluir',
                 cancelButtonText: 'Cancelar'
             });
-
             if(res.isConfirmed) {
                 try { 
                     await deleteDoc(doc(db, "respostas", id)); 
-                    Swal.fire('Pronto!', 'O cadastro foi removido.', 'success');
-                } catch (error) { 
-                    Swal.fire('Erro!', 'Falha ao excluir.', 'error'); 
-                }
+                    Swal.fire('Pronto!', 'Removido com sucesso.', 'success');
+                } catch (e) { Swal.fire('Erro!', 'Falha ao excluir.', 'error'); }
             }
         };
 
@@ -120,9 +128,7 @@
             
             snap.forEach(docSnap => {
                 const r = docSnap.data();
-                const id = docSnap.id;
                 dadosExport.push(r);
-                
                 ['p1','p2','p3','p4','p5','p6'].forEach(p => {
                     if(r[p]) counts[p][r[p]] = (counts[p][r[p]] || 0) + 1;
                 });
@@ -130,7 +136,7 @@
                 const card = document.createElement('div');
                 card.className = 'card-resposta';
                 card.innerHTML = `
-                    <button class="btn-delete" onclick="excluirCadastro('${id}')">✕</button>
+                    <button class="btn-delete" onclick="excluirCadastro('${docSnap.id}')">✕</button>
                     <div class="header-card">
                         <h5>${r.nome}</h5>
                         <span class="sub-info">🎂 ${r.idade} anos | 📱 ${r.whatsapp}</span>
@@ -138,14 +144,11 @@
                     <div class="info-grid">
                         <div><span class="label">Dificuldade</span><span class="value">${r.p1 || '-'}</span></div>
                         <div><span class="label">Busca em</span><span class="value">${r.p2 || '-'}</span></div>
-                        <div><span class="label">Frequência</span><span class="value">${r.p3 || '-'}</span></div>
                         <div><span class="label">Profissão</span><span class="value">${r.p4 || '-'}</span></div>
-                        <div><span class="label">P. Paralela</span><span class="value">${r.p5 || '-'}</span></div>
                         <div><span class="label">Pagaria?</span><span class="value">${r.p6 || '-'}</span></div>
                     </div>`;
                 lista.appendChild(card);
             });
-            
             document.getElementById('total').innerText = `${snap.size} RESPOSTAS`;
             ['p1','p2','p3','p4','p5','p6'].forEach((p, i) => createPie(`c${i+1}`, counts[p]));
         });
@@ -161,4 +164,3 @@
     </script>
 </body>
 </html>
-
