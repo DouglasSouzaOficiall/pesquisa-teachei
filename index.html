@@ -23,7 +23,6 @@
         .badge-prof { background: #E8F9EE; color: var(--green); padding: 6px 15px; border-radius: 20px; font-size: 0.75rem; font-weight: 900; display: inline-block; margin-bottom: 15px; }
         .btn-teachei { background: var(--green); color: white; border: none; border-radius: 10px; padding: 18px; width: 100%; font-weight: 900; font-size: 1.1rem; }
         .btn-back { background: none; border: none; color: #8E8E93; font-weight: 600; margin-top: 20px; }
-        .success-icon { font-size: 50px; color: var(--green); margin-bottom: 20px; }
     </style>
 </head>
 <body>
@@ -35,18 +34,20 @@
         <form id="formTeachei">
             <div class="step active" id="s1">
                 <h2>Nome completo?</h2>
-                <input type="text" id="nome" class="input-teachei" placeholder="Nome e sobrenome" required>
+                <input type="text" id="nome" class="input-teachei" placeholder="Nome e sobrenome">
                 <button type="button" class="btn-teachei" onclick="go(2)">PRÓXIMO</button>
             </div>
+
             <div class="step" id="s2">
                 <h2>Idade?</h2>
-                <input type="number" id="idade" class="input-teachei" placeholder="Sua idade" required>
+                <input type="number" id="idade" class="input-teachei" placeholder="Sua idade">
                 <button type="button" class="btn-teachei" onclick="go(3)">PRÓXIMO</button>
                 <button type="button" class="btn-back" onclick="go(1)">VOLTAR</button>
             </div>
+
             <div class="step" id="s3">
                 <h2>Whatsapp com DDD?</h2>
-                <input type="tel" id="whatsapp" class="input-teachei" placeholder="(00) 00000-0000" required>
+                <input type="tel" id="whatsapp" class="input-teachei" placeholder="(00) 00000-0000">
                 <button type="button" id="btnZap" class="btn-teachei" onclick="validarZapEProximo()">PRÓXIMO</button>
                 <button type="button" class="btn-back" onclick="go(2)">VOLTAR</button>
             </div>
@@ -104,14 +105,14 @@
             <div class="step" id="s9">
                 <span class="badge-prof">ANUNCIANTE</span>
                 <h2>6 – Qual a sua profissão?</h2>
-                <input type="text" id="p6" class="input-teachei" placeholder="Sua profissão" required>
+                <input type="text" id="p6" class="input-teachei" placeholder="Sua profissão">
                 <button type="button" class="btn-teachei" onclick="go(10)">PRÓXIMO</button>
                 <button type="button" class="btn-back" onclick="go(8)">VOLTAR</button>
             </div>
 
             <div class="step" id="s10">
                 <span class="badge-prof">ANUNCIANTE</span>
-                <h2>7 – Se você tivesse um canal para ganhar um dinheiro extra, divulgando um produto... você pensaria em usá-lo?</h2>
+                <h2>7 – Se você tivesse um canal para ganhar um dinheiro extra... você pensaria em usá-lo?</h2>
                 <div class="card-option" onclick="select(this, 'p7', 'Sim')">SIM</div>
                 <div class="card-option" onclick="select(this, 'p7', 'Não')">NÃO</div>
                 <input type="hidden" id="p7">
@@ -129,11 +130,10 @@
                 <button type="submit" id="btnFinal" class="btn-teachei mt-4" style="background-color: #000;">ENVIAR PESQUISA</button>
                 <button type="button" class="btn-back" onclick="go(10)">VOLTAR</button>
             </div>
-
+            
             <div class="step" id="sSuccess">
-                <div class="success-icon">✔</div>
+                <div class="success-icon" style="font-size: 50px; color: var(--green); margin-bottom: 20px;">✔</div>
                 <h2>Pesquisa enviada!</h2>
-                <p>Obrigado por participar.</p>
                 <button type="button" class="btn-teachei mt-4" onclick="location.reload()">NOVA PESQUISA</button>
             </div>
         </form>
@@ -157,28 +157,24 @@
         const alertError = (msg) => Swal.fire({ icon: 'error', title: 'Atenção', text: msg, confirmButtonColor: '#34C759' });
 
         window.go = (n) => {
-            const currentStep = n - 1;
-            
-            // Validações de botão "Próximo"
             if (n === 2) {
-                const nome = document.getElementById('nome').value.trim();
-                if (nome.split(" ").length < 2) return alertError("Digite seu nome completo (Nome e sobrenome).");
+                const val = document.getElementById('nome').value.trim();
+                if (val.split(" ").length < 2) return alertError("Digite seu nome completo (Nome e Sobrenome).");
             }
             if (n === 3) {
-                const idade = document.getElementById('idade').value;
-                if (!idade) return alertError("Por favor, informe sua idade.");
-                if (idade < 18) return alertError("Você precisa ter 18 anos ou mais.");
+                const val = document.getElementById('idade').value;
+                if (!val || val.trim() === "") return alertError("Por favor, informe sua idade para continuar.");
+                if (val < 18) return alertError("Você precisa ter 18 anos ou mais.");
             }
-            // Trava para perguntas de múltipla escolha
-            if (n === 5 && !document.getElementById('p1').value) return alertError("Selecione uma opção para continuar.");
-            if (n === 6 && !document.getElementById('p2').value) return alertError("Selecione uma opção para continuar.");
-            if (n === 8 && !document.getElementById('p4').value) return alertError("Selecione uma opção para continuar.");
-            if (n === 9 && !document.getElementById('p5').value) return alertError("Selecione uma opção para continuar.");
+            if (n === 5 && !document.getElementById('p1').value) return alertError("Selecione uma opção.");
+            if (n === 6 && !document.getElementById('p2').value) return alertError("Selecione uma opção.");
+            if (n === 8 && !document.getElementById('p4').value) return alertError("Selecione uma opção.");
+            if (n === 9 && !document.getElementById('p5').value) return alertError("Selecione uma opção.");
             if (n === 10) {
-                const prof = document.getElementById('p6').value.trim();
-                if (!prof) return alertError("Por favor, digite sua profissão.");
+                const val = document.getElementById('p6').value.trim();
+                if (!val) return alertError("Informe sua profissão.");
             }
-            if (n === 11 && !document.getElementById('p7').value) return alertError("Selecione uma opção para continuar.");
+            if (n === 11 && !document.getElementById('p7').value) return alertError("Selecione uma opção.");
 
             document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
             document.getElementById('s' + n).classList.add('active');
@@ -189,20 +185,17 @@
             const zap = document.getElementById('whatsapp').value.trim();
             if (!zap) return alertError("Informe seu Whatsapp.");
             const btn = document.getElementById('btnZap');
-            btn.innerText = "VALIDANDO...";
-            btn.disabled = true;
+            btn.innerText = "VALIDANDO..."; btn.disabled = true;
             try {
                 const q = query(collection(db, "respostas"), where("whatsapp", "==", zap));
                 const snap = await getDocs(q);
                 if (!snap.empty) {
-                    btn.disabled = false;
-                    btn.innerText = "PRÓXIMO";
+                    btn.disabled = false; btn.innerText = "PRÓXIMO";
                     return alertError("Este número já participou.");
                 }
                 go(4);
             } catch (e) { alertError("Erro de conexão."); }
-            btn.disabled = false;
-            btn.innerText = "PRÓXIMO";
+            btn.disabled = false; btn.innerText = "PRÓXIMO";
         };
 
         window.decidirFluxoP3 = () => {
@@ -229,10 +222,9 @@
 
         document.getElementById('formTeachei').onsubmit = async (e) => {
             e.preventDefault();
-            if (!document.getElementById('p8').value) return alertError("Responda a última pergunta.");
+            if (!document.getElementById('p8').value) return alertError("Selecione uma opção.");
             const btn = document.getElementById('btnFinal');
-            btn.innerText = "ENVIANDO...";
-            btn.disabled = true;
+            btn.innerText = "ENVIANDO..."; btn.disabled = true;
             try {
                 await addDoc(collection(db, "respostas"), {
                     nome: document.getElementById('nome').value,
