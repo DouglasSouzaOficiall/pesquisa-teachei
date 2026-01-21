@@ -111,7 +111,7 @@
 
             <div class="step" id="s10">
                 <span class="badge-prof">ANUNCIANTE</span>
-                <h2>7 – Se você tivesse um canal para ganhar um dinheiro extra, divulgando um produto que tenha interesse em vender ou um serviço que tenha habilidade (dentro ou fora da sua área de atuação), você pensaria em usá-lo</h2>
+                <h2>7 – Se você tivesse um canal para ganhar um dinheiro extra, divulgando um produto... você pensaria em usá-lo?</h2>
                 <div class="card-option" onclick="select(this, 'p7', 'Sim')">SIM</div>
                 <div class="card-option" onclick="select(this, 'p7', 'Não')">NÃO</div>
                 <input type="hidden" id="p7">
@@ -121,7 +121,7 @@
 
             <div class="step" id="s11">
                 <span class="badge-prof">OFERTA</span>
-                <h2>8 – Se esse canal custasse menos de 9 reais por mês — o que dá menos de 30 centavos por dia — e te desse alcance em toda a cidade, com um potencial de mais de 100 mil pessoas buscando por produtos e serviços, o que você acharia desse valor?</h2>
+                <h2>8 – Se esse canal custasse menos de 9 reais por mês... o que você acharia desse valor?</h2>
                 <div class="card-option" onclick="select(this, 'p8', 'Bom Valor')">BOM VALOR</div>
                 <div class="card-option" onclick="select(this, 'p8', 'Caro')">CARO</div>
                 <div class="card-option" onclick="select(this, 'p8', 'Muito Barato')">MUITO BARATO</div>
@@ -157,14 +157,29 @@
         const alertError = (msg) => Swal.fire({ icon: 'error', title: 'Atenção', text: msg, confirmButtonColor: '#34C759' });
 
         window.go = (n) => {
+            const currentStep = n - 1;
+            
+            // Validações de botão "Próximo"
             if (n === 2) {
                 const nome = document.getElementById('nome').value.trim();
-                if (nome.split(" ").length < 2) return alertError("Digite seu nome completo.");
+                if (nome.split(" ").length < 2) return alertError("Digite seu nome completo (Nome e sobrenome).");
             }
             if (n === 3) {
                 const idade = document.getElementById('idade').value;
-                if (!idade || idade < 18) return alertError("Você precisa ter 18 anos ou mais.");
+                if (!idade) return alertError("Por favor, informe sua idade.");
+                if (idade < 18) return alertError("Você precisa ter 18 anos ou mais.");
             }
+            // Trava para perguntas de múltipla escolha
+            if (n === 5 && !document.getElementById('p1').value) return alertError("Selecione uma opção para continuar.");
+            if (n === 6 && !document.getElementById('p2').value) return alertError("Selecione uma opção para continuar.");
+            if (n === 8 && !document.getElementById('p4').value) return alertError("Selecione uma opção para continuar.");
+            if (n === 9 && !document.getElementById('p5').value) return alertError("Selecione uma opção para continuar.");
+            if (n === 10) {
+                const prof = document.getElementById('p6').value.trim();
+                if (!prof) return alertError("Por favor, digite sua profissão.");
+            }
+            if (n === 11 && !document.getElementById('p7').value) return alertError("Selecione uma opção para continuar.");
+
             document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
             document.getElementById('s' + n).classList.add('active');
             window.scrollTo(0, 0);
@@ -192,12 +207,12 @@
 
         window.decidirFluxoP3 = () => {
             const p3 = document.getElementById('p3').value;
-            if (!p3) return alertError("Selecione uma opção.");
+            if (!p3) return alertError("Selecione uma opção para continuar.");
             if (p3 === "Nenhuma vez") {
-                document.getElementById('p4').value = "Não utiliza"; // Grava valor padrão
-                go(8); // Pula para Pergunta 5 (trabalha atualmente)
+                document.getElementById('p4').value = "Não utiliza";
+                go(8); 
             } else {
-                go(7); // Vai para Pergunta 4 (meio de busca)
+                go(7);
             }
         };
 
@@ -240,4 +255,3 @@
     </script>
 </body>
 </html>
-
