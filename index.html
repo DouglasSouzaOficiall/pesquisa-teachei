@@ -44,24 +44,24 @@
     <div class="container-app">
         <form id="formTeachei">
             <div class="step active" id="s1">
-                <h2>Qual seu nome completo?</h2>
+                <h2>Nome completo?</h2>
                 <input type="text" id="nome" class="input-teachei" placeholder="Nome completo" required>
                 <button type="button" class="btn-teachei" onclick="go(2)">PRÓXIMO</button>
             </div>
             <div class="step" id="s2">
-                <h2>Qual sua idade?</h2>
+                <h2>Idade?</h2>
                 <input type="number" id="idade" class="input-teachei" placeholder="Sua idade" required>
                 <button type="button" class="btn-teachei" onclick="go(3)">PRÓXIMO</button>
                 <button type="button" class="btn-back" onclick="go(1)">VOLTAR</button>
             </div>
             <div class="step" id="s3">
-                <h2>Seu Whatsapp com DDD?</h2>
+                <h2>Whatsapp com DDD?</h2>
                 <input type="tel" id="whatsapp" class="input-teachei" placeholder="(00) 00000-0000" required>
                 <button type="button" class="btn-teachei" onclick="go(4)">PRÓXIMO</button>
                 <button type="button" class="btn-back" onclick="go(2)">VOLTAR</button>
             </div>
             <div class="step" id="s4">
-                <h2>Você tem dificuldade em encontrar contatos que te ajudam em demandas diárias (ex: pão caseiro, limpa piscina, iPhone)??</h2>
+                <h2>Você sente que é difícil achar rápido o contato de profissionais ou serviços locais (ex: um chaveiro, alguém que limpe piscina ou venda pão caseiro)?</h2>
                 <div class="card-option" onclick="select(this, 'p1', 'Sim')">SIM</div>
                 <div class="card-option" onclick="select(this, 'p1', 'Não')">NÃO</div>
                 <input type="hidden" id="p1">
@@ -181,4 +181,5 @@
         };
     </script>
 </body>
+
 </html>
